@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>CGNet Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    #map { height: 100vh; width: 100vw; }
+    
+    #sidebar {
+      display: none; 
+      position: absolute; top: 10px; right: 10px; width: 220px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+      padding: 10px; z-index: 1000;
+      border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      max-height: 80vh; overflow-y: auto;
+    }
+
+    .missing-item { 
+      padding: 8px 0; 
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      font-size: 12px;
+    }
+
+    .btn-link { 
+      display: inline-block; margin-top: 4px; padding: 6px 10px; 
+      background: #007bff; color: white; text-decoration: none; 
+      border-radius: 4px; font-size: 11px; font-weight: bold;
+    }
+    
+    .popup-link {
+      color: #007bff;
+      font-weight: bold;
+      text-decoration: none;
+      display: block;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="sidebar">
+    <h4 style="margin:0 0 10px 0">Needs Location</h4>
+    <div id="missing-list"></div>
+  </div>
+
+  <script>
+    const map = L.map('map').setView([27.7172, 85.3240], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const URL = 'https://script.google.com/macros/s/AKfycbww_oKb4yq-eYbEbrHYGpXrfI5fWo-h0FL-pkate96BsHlS47kiei-ssNU0lhMgWiPA/exec';
+
+    function loadData() {
+      fetch(URL + "?v=" + new Date().getTime())
+        .then(res => res.json())
+        .then(data => {
+          map.eachLayer(l => { if (l instanceof L.Marker) map.removeLayer(l); });
+          const sidebar = document.getElementById('sidebar');
+          const list = document.getElementById('missing-list');
+          list.innerHTML = "";
+          let missingCount = 0;
+
+          data.forEach(item => {
+            // Clean up the URL: Ensure no extra spaces and correct formatting
+            const cleanUrl = item.ticketUrl ? item.ticketUrl.trim() : "#";
+
+            if (item.lat && item.lng && item.lat !== 0) {
+              L.marker([item.lat, item.lng]).addTo(map)
+                .bindPopup(`
+                  <div style="text-align:center">
+                    <b style="font-size:14px">Ticket: ${item.ticket}</b><br>
+                    <a href="${cleanUrl}" target="_blank" rel="noreferrer" class="popup-link">▶ View Ticket Detail</a>
+                  </div>
+                `);
+            } else if (item.ticket) {
+              missingCount++;
+              const div = document.createElement('div');
+              div.className = 'missing-item';
+              div.innerHTML = `
+                <b>${item.ticket}</b><br>
+                <a href="${cleanUrl}" target="_blank" rel="noreferrer" class="btn-link">Fix Location</a>
+              `;
+              list.appendChild(div);
+            }
+          });
+
+          sidebar.style.display = (missingCount > 0) ? "block" : "none";
+        })
+        .catch(err => console.error(err));
+    }
+    
+    loadData();
+    setInterval(loadData, 60000);
+  </script>
+</body>
+</html>
