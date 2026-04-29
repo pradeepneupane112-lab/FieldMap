@@ -63,7 +63,6 @@
           let missingCount = 0;
 
           data.forEach(item => {
-            // Clean up the URL: Ensure no extra spaces and correct formatting
             const cleanUrl = item.ticketUrl ? item.ticketUrl.trim() : "#";
 
             if (item.lat && item.lng && item.lat !== 0) {
@@ -71,7 +70,11 @@
                 .bindPopup(`
                   <div style="text-align:center">
                     <b style="font-size:14px">Ticket: ${item.ticket}</b><br>
-                    <a href="${cleanUrl}" target="_blank" rel="noreferrer" class="popup-link">▶ View Ticket Detail</a>
+                    <a href="${cleanUrl}" 
+                       target="_blank" 
+                       rel="noreferrer" 
+                       referrerpolicy="no-referrer" 
+                       class="popup-link">▶ View Ticket Detail</a>
                   </div>
                 `);
             } else if (item.ticket) {
@@ -80,7 +83,11 @@
               div.className = 'missing-item';
               div.innerHTML = `
                 <b>${item.ticket}</b><br>
-                <a href="${cleanUrl}" target="_blank" rel="noreferrer" class="btn-link">Fix Location</a>
+                <a href="${cleanUrl}" 
+                   target="_blank" 
+                   rel="noreferrer" 
+                   referrerpolicy="no-referrer" 
+                   class="btn-link">Fix Location</a>
               `;
               list.appendChild(div);
             }
