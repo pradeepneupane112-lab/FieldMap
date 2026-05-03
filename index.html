@@ -16,13 +16,15 @@
     .missing-item { padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.1); font-size: 12px; }
     .btn-link { 
       display: inline-block; margin-top: 4px; padding: 6px 10px; 
-      background: #007bff; color: white; border: none; cursor: pointer;
+      background: #28a745; color: white; border: none; cursor: pointer;
       border-radius: 4px; font-size: 11px; font-weight: bold; 
     }
     .popup-btn {
-      background: #007bff; color: white; border: none; padding: 6px 12px;
+      background: #28a745; color: white; border: none; padding: 6px 12px;
       border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 8px;
     }
+    /* Style for when copied */
+    .copied { background: #6c757d !important; }
   </style>
 </head>
 <body>
@@ -38,11 +40,21 @@
 
     const URL = 'https://script.google.com/macros/s/AKfycbww_oKb4yq-eYbEbrHYGpXrfI5fWo-h0FL-pkate96BsHlS47kiei-ssNU0lhMgWiPA/exec';
 
-    // This function hides the map's identity from the portal
-    function openPortal(url) {
-      const newWindow = window.open();
-      newWindow.opener = null;
-      newWindow.location.href = url;
+    // NEW FUNCTION: Copies the link and gives visual feedback
+    function copyLink(url, btn) {
+      navigator.clipboard.writeText(url).then(() => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "✓ Copied!";
+        btn.classList.add('copied');
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.classList.remove('copied');
+        }, 2000);
+      }).catch(err => {
+        alert("Failed to copy link.");
+      });
     }
 
     function loadData() {
@@ -61,8 +73,8 @@
                 .bindPopup(`
                   <div style="text-align:center">
                     <b style="font-size:14px">Ticket: ${item.ticket}</b><br>
-                    <button onclick="openPortal('${item.ticketUrl}')" class="popup-btn">
-                      ▶ View Ticket Detail
+                    <button onclick="copyLink('${item.ticketUrl}', this)" class="popup-btn">
+                      📋 Copy Link
                     </button>
                   </div>
                 `);
@@ -72,7 +84,7 @@
               div.className = 'missing-item';
               div.innerHTML = `
                 <b>${item.ticket}</b><br>
-                <button onclick="openPortal('${item.ticketUrl}')" class="btn-link">Fix Location</button>
+                <button onclick="copyLink('${item.ticketUrl}', this)" class="btn-link">📋 Copy Fix Link</button>
               `;
               list.appendChild(div);
             }
