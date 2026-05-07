@@ -22,6 +22,13 @@
     .popup-btn {
       background: #28a745; color: white; border: none; padding: 6px 12px;
       border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 8px;
+      width: 100%;
+    }
+    .nav-btn {
+      background: #4285F4; color: white; border: none; padding: 6px 12px;
+      border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 5px;
+      width: 100%; text-decoration: none; display: inline-block; text-align: center;
+      box-sizing: border-box; font-size: 12px;
     }
     .copied { background: #6c757d !important; }
   </style>
@@ -39,7 +46,6 @@
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // PASTE YOUR NEW DEPLOYMENT URL HERE
     const URL = 'https://script.google.com/macros/s/AKfycbww_oKb4yq-eYbEbrHYGpXrfI5fWo-h0FL-pkate96BsHlS47kiei-ssNU0lhMgWiPA/exec';
 
     function copyLink(url, btn) {
@@ -55,10 +61,10 @@
     }
 
     function loadData() {
-      fetch(URL)
+      // Added timestamp to URL to force fresh data from Google Sheets
+      fetch(URL + "?v=" + new Date().getTime())
         .then(res => res.json())
         .then(data => {
-          // Clear only markers
           map.eachLayer(l => { if (l instanceof L.Marker) map.removeLayer(l); });
           
           const list = document.getElementById('missing-list');
@@ -67,15 +73,19 @@
           let missingCount = 0;
 
           data.forEach(item => {
-            // Only place marker if lat/lng are valid numbers
-            if (item.lat !== null && item.lng !== null && !isNaN(item.lat)) {
+            if (item.lat !== null && item.lng !== null && !isNaN(item.lat) && item.lat !== 0) {
+              const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`;
+
               L.marker([item.lat, item.lng]).addTo(map)
                 .bindPopup(`
-                  <div style="text-align:center">
+                  <div style="text-align:center; min-width: 150px;">
                     <b style="font-size:14px">Ticket: ${item.ticket}</b><br>
                     <button onclick="copyLink('${item.ticketUrl}', this)" class="popup-btn">
                       📋 Copy Link
                     </button>
+                    <a href="${gMapsUrl}" target="_blank" class="nav-btn">
+                      📍 Get Directions
+                    </a>
                   </div>
                 `);
             } else if (item.ticket) {
@@ -95,7 +105,7 @@
     }
 
     loadData();
-    setInterval(loadData, 60000); // Refresh every minute
+    setInterval(loadData, 60000); // Refresh data every minute
   </script>
 </body>
 </html>
